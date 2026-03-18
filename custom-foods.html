@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <title>MealLogger | Custom Foods</title>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul><li><strong>MealLogger</strong></li></ul>
+        <ul>
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="custom-foods.html">Custom Foods</a></li>
+            <li><a href="history.html">History</a></li>
+            <li><a href="goals.html">Setup Goals</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <p class="page-title">Custom Foods</p>
+
+        <article>
+            <header>Add a Custom Food</header>
+
+            <form id="custom-food-form">
+                <label>
+                    Food Name
+                    <input type="text" id="custom-name" placeholder="Add a food name" required>
+                </label>
+                <div class="goals-grid">
+                    <label>
+                        Calories per 100g
+                        <input type="number" id="custom-calories" min="0" step="0.1" placeholder="e.g. 80" required>
+                    </label>
+                    <label>
+                        Protein per 100g (g)
+                        <input type="number" id="custom-protein" min="0" step="0.1" placeholder="e.g. 5">
+                    </label>
+                    <label>
+                        Carbohydrate per 100g (g)
+                        <input type="number" id="custom-carb" min="0" step="0.1" placeholder="e.g. 12">
+                    </label>
+                    <label>
+                        Fat per 100g (g)
+                        <input type="number" id="custom-fat" min="0" step="0.1" placeholder="e.g. 2">
+                    </label>
+                    <label>
+                        Fibre per 100g (g)
+                        <input type="number" id="custom-fibre" min="0" step="0.1" placeholder="e.g. 3">
+                    </label>
+                </div>
+                <button type="submit">Save Custom Food</button>
+            </form>
+
+            <p id="custom-food-error" style="color:#607d8b; font-size:0.82rem; display:none; margin-top:0.5rem;"></p>
+        </article>
+
+        <article style="margin-top:1rem;">
+            <header>Your Custom Foods</header>
+            <small id="custom-food-count" style="display:block; margin-bottom:0.8rem; color:#90a4ae;"></small>
+            <button type="button" class="outline" id="reset-custom-foods-btn" style="margin-bottom:0.8rem;">Reset all custom foods</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Food</th>
+                        <th>Calories /100g</th>
+                        <th>Protein /100g</th>
+                        <th>Carbs /100g</th>
+                        <th>Fat /100g</th>
+                        <th>Fibre /100g</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="custom-food-table-body">
+                    <tr>
+                        <td colspan="7" class="empty-state">No custom foods added yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </article>
+    </main>
+
+    <script src="auth-ui.js"></script>
+    <script src="profile-store.js"></script>
+    <script>
+        let customFoods = [];
+
+        function normalizeFoodName(name) {
+            return (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        }
+
+        async function loadCustomFoods() {
+            customFoods = await MealLoggerStore.fetchCustomFoods();
+        }
+
+        async function saveCustomFoods() {
+            customFoods = await MealLoggerStore.saveCustomFoods(customFoods);
+        }
+
+        function renderCustomFoodCount() {
+            const countEl = document.getElementById('custom-food-count');
+            countEl.textContent = 'Custom foods saved: ' + customFoods.length;
+        }
+
+        function renderCustomFoodsTable() {
+            const body = document.getElementById('custom-food-table-body');
+            if (customFoods.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" class="empty-state">No custom foods added yet.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = customFoods.map((f, idx) => `
+                <tr>
+                    <td>${f['Food Name']}</td>
+                    <td>${((f['Calories'] || 0) * 100).toFixed(1)}</td>
+                    <td>${((f['Protein'] || 0) * 100).toFixed(1)}g</td>
+                    <td>${((f['Carbohydrate'] || 0) * 100).toFixed(1)}g</td>
+                    <td>${((f['Fat'] || 0) * 100).toFixed(1)}g</td>
+                    <td>${((f['Fibre'] || 0) * 100).toFixed(1)}g</td>
+                    <td><button class="delete-btn" onclick="deleteCustomFood(${idx})">Remove</button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteCustomFood(idx) {
+            const removed = customFoods[idx];
+            customFoods.splice(idx, 1);
+
+            try {
+                await saveCustomFoods();
+                renderCustomFoodCount();
+                renderCustomFoodsTable();
+            } catch {
+                customFoods.splice(idx, 0, removed);
+                const errorEl = document.getElementById('custom-food-error');
+                errorEl.textContent = 'Could not remove custom food. Check local file storage server.';
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function setupForm() {
+            const form = document.getElementById('custom-food-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const errorEl = document.getElementById('custom-food-error');
+                const rawName = document.getElementById('custom-name').value;
+                const name = (rawName || '').trim().replace(/\s+/g, ' ');
+                const cal100 = parseFloat(document.getElementById('custom-calories').value);
+                const prot100 = parseFloat(document.getElementById('custom-protein').value || '0');
+                const carb100 = parseFloat(document.getElementById('custom-carb').value || '0');
+                const fat100 = parseFloat(document.getElementById('custom-fat').value || '0');
+                const fibre100 = parseFloat(document.getElementById('custom-fibre').value || '0');
+
+                if (!name) {
+                    errorEl.textContent = 'Please add a food name.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                if (!Number.isFinite(cal100) || cal100 < 0) {
+                    errorEl.textContent = 'Please enter valid calories per 100g.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                const values = [prot100, carb100, fat100, fibre100];
+                if (values.some(v => !Number.isFinite(v) || v < 0)) {
+                    errorEl.textContent = 'Macros must be valid non-negative numbers.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                const normalizedName = normalizeFoodName(name);
+                const existsCustom = customFoods.some(f => normalizeFoodName(f['Food Name']) === normalizedName);
+
+                if (existsCustom) {
+                    errorEl.textContent = 'This custom food name already exists.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                const newFood = {
+                    'Food Name': name,
+                    'Calories': cal100 / 100,
+                    'Protein': prot100 / 100,
+                    'Carbohydrate': carb100 / 100,
+                    'Fat': fat100 / 100,
+                    'Fibre': fibre100 / 100,
+                    '__custom': true
+                };
+
+                customFoods.push(newFood);
+
+                try {
+                    await saveCustomFoods();
+                    renderCustomFoodCount();
+                    renderCustomFoodsTable();
+                    form.reset();
+                    errorEl.textContent = 'Custom food saved.';
+                    errorEl.style.display = 'block';
+                } catch {
+                    customFoods = customFoods.filter(f => f !== newFood);
+                    errorEl.textContent = 'Could not save custom food. Check local file storage server.';
+                    errorEl.style.display = 'block';
+                }
+            });
+        }
+
+        function setupResetButton() {
+            const btn = document.getElementById('reset-custom-foods-btn');
+            if (!btn) return;
+
+            btn.addEventListener('click', async () => {
+                const ok = confirm('Reset all custom foods?');
+                if (!ok) return;
+
+                const previousFoods = [...customFoods];
+                customFoods = [];
+
+                try {
+                    await saveCustomFoods();
+                    renderCustomFoodCount();
+                    renderCustomFoodsTable();
+                    const errorEl = document.getElementById('custom-food-error');
+                    errorEl.textContent = 'All custom foods were removed.';
+                    errorEl.style.display = 'block';
+                } catch {
+                    customFoods = previousFoods;
+                    const errorEl = document.getElementById('custom-food-error');
+                    errorEl.textContent = 'Could not reset custom foods. Check local file storage server.';
+                    errorEl.style.display = 'block';
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await loadCustomFoods();
+            } catch {
+                customFoods = [];
+            }
+
+            renderCustomFoodCount();
+            renderCustomFoodsTable();
+            setupForm();
+            setupResetButton();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <title>MealLogger | History</title>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul><li><strong>MealLogger</strong></li></ul>
+        <ul>
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="custom-foods.html">Custom Foods</a></li>
+            <li><a href="history.html">History</a></li>
+            <li><a href="goals.html">Setup Goals</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <p class="page-title">Meal History</p>
+
+        <article>
+            <header>Past 12 Weeks</header>
+            <div id="history-container">
+                <div class="no-history" id="no-history-msg">
+                    <p>No history yet.</p>
+                    <p style="font-size:0.8rem;">Start logging meals on the Dashboard and they will appear here.</p>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <script src="auth-ui.js"></script>
+    <script src="profile-store.js"></script>
+    <script>
+        const CIRC = 2 * Math.PI * 42;
+
+        function ringOffset(consumed, goal) {
+            const ratio = goal > 0 ? Math.min(consumed / goal, 1) : 0;
+            return CIRC - ratio * CIRC;
+        }
+
+        function buildMiniRing(id, color, consumed, goal, label) {
+            const offset = ringOffset(consumed, goal).toFixed(1);
+            return `
+                <div class="history-ring-card">
+                    <svg width="70" height="70" viewBox="0 0 100 100">
+                        <circle class="ring-track" cx="50" cy="50" r="42"/>
+                        <circle cx="50" cy="50" r="42"
+                            fill="none"
+                            stroke="${color}"
+                            stroke-width="10"
+                            stroke-linecap="round"
+                            stroke-dasharray="${CIRC.toFixed(1)}"
+                            stroke-dashoffset="${offset}"
+                            style="transform:rotate(-90deg);transform-origin:50% 50%;"/>
+                    </svg>
+                    <span class="ring-label">${label}</span>
+                    <span class="ring-value">${Math.round(consumed)}${label === 'Calories' ? '' : 'g'}</span>
+                </div>`;
+        }
+
+        function formatDateLabel(dateStr) {
+            const d = new Date(dateStr + 'T12:00:00');
+            const today = new Date();
+            today.setHours(12, 0, 0, 0);
+            const diff = Math.round((today - d) / (1000 * 60 * 60 * 24));
+            if (diff === 0) return 'Today';
+            if (diff === 1) return 'Yesterday';
+            return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        async function loadHistory() {
+            let profile = null;
+            try {
+                profile = await MealLoggerStore.fetchProfileData();
+            } catch {
+                profile = MealLoggerStore.defaultProfileData(MealLoggerStore.getActiveProfileKey());
+            }
+
+            const goals = profile.userGoals && profile.userGoals.calories ? profile.userGoals : { calories: 2000, protein: 50, carbs: 260, fat: 78 };
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 84);
+            const days = [];
+
+            const mealsByDate = profile.mealsByDate && typeof profile.mealsByDate === 'object' ? profile.mealsByDate : {};
+            Object.keys(mealsByDate).forEach(dateStr => {
+                if (new Date(dateStr) >= cutoff) {
+                    days.push(dateStr);
+                }
+            });
+
+            days.sort((a, b) => b.localeCompare(a));
+
+            const container = document.getElementById('history-container');
+            const noMsg     = document.getElementById('no-history-msg');
+
+            if (days.length === 0) {
+                noMsg.style.display = 'block';
+                return;
+            }
+            noMsg.style.display = 'none';
+
+            days.forEach(dateStr => {
+                const meals = Array.isArray(mealsByDate[dateStr]) ? mealsByDate[dateStr] : [];
+                if (meals.length === 0) return;
+
+                const totals = meals.reduce((acc, m) => {
+                    acc.cal  += m.kcal  || 0;
+                    acc.prot += m.prot  || 0;
+                    acc.carb += m.carb  || 0;
+                    acc.fat  += m.fat   || 0;
+                    return acc;
+                }, { cal: 0, prot: 0, carb: 0, fat: 0 });
+
+                const dayId = 'day-' + dateStr.replace(/-/g, '');
+
+                const div = document.createElement('div');
+                div.className = 'history-day';
+                div.innerHTML = `
+                    <div class="history-day-header" onclick="toggleDay('${dayId}', this)">
+                        <span>${formatDateLabel(dateStr)}</span>
+                        <span class="day-kcal">${Math.round(totals.cal)} kcal logged</span>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="history-day-body" id="${dayId}">
+                        <div class="history-ring-row">
+                            ${buildMiniRing('', '#546e7a', totals.cal,  goals.calories || 2000, 'Calories')}
+                            ${buildMiniRing('', '#78909c', totals.prot, goals.protein  || 50,   'Protein')}
+                            ${buildMiniRing('', '#90a4ae', totals.carb, goals.carbs    || 260,  'Carbs')}
+                            ${buildMiniRing('', '#b0bec5', totals.fat,  goals.fat      || 78,   'Fat')}
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Category</th><th>Food</th><th>Amount</th>
+                                    <th>Kcal</th><th>Protein</th><th>Carbs</th><th>Fat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${meals.map(m => `
+                                <tr>
+                                    <td><span class="meal-badge">${m.cat}</span></td>
+                                    <td>${m.name}</td>
+                                    <td>${m.grams}g</td>
+                                    <td>${Math.round(m.kcal)}</td>
+                                    <td>${m.prot ? m.prot.toFixed(1) + 'g' : '—'}</td>
+                                    <td>${m.carb ? m.carb.toFixed(1) + 'g' : '—'}</td>
+                                    <td>${m.fat  ? m.fat.toFixed(1)  + 'g' : '—'}</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleDay(id, header) {
+            const body = document.getElementById(id);
+            body.classList.toggle('open');
+            header.classList.toggle('open');
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>

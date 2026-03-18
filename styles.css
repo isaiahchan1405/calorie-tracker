@@ -1,0 +1,421 @@
+/* =============================================
+   MealLogger – UI Stylesheet
+   Classless base: PicoCSS v1
+   Custom layer on top of PicoCSS
+   ============================================= */
+
+/* ── Tokens ─────────────────────────────────── */
+:root {
+    --accent:      #546e7a;
+    --accent-2:    #78909c;
+    --ring-cal:    #546e7a;
+    --ring-prot:   #78909c;
+    --ring-carb:   #90a4ae;
+    --ring-fat:    #b0bec5;
+    --ring-bg:     #eceff1;
+    --card-radius: 1rem;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --spacing:     1.5rem;
+}
+
+/* ── Global ──────────────────────────────────── */
+body {
+    background: #f5f7fa;
+}
+
+/* ── Nav ─────────────────────────────────────── */
+nav {
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0.75rem var(--spacing);
+    margin-bottom: var(--spacing);
+    box-shadow: var(--card-shadow);
+}
+
+nav strong {
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+}
+
+.auth-ui-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.auth-ui-status {
+    font-size: 0.75rem;
+    color: #607d8b;
+    max-width: 170px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.auth-ui-btn {
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.72rem;
+}
+
+/* ── Cards ───────────────────────────────────── */
+article {
+    border-radius: var(--card-radius) !important;
+    box-shadow: var(--card-shadow) !important;
+    border: none !important;
+    background: #ffffff;
+    padding: var(--spacing);
+}
+
+article header {
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: 1px solid #eceff1;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    color: var(--accent);
+}
+
+/* ── Macro Ring Grid ─────────────────────────── */
+.ring-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: var(--spacing);
+}
+
+@media (max-width: 768px) {
+    .ring-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ── Individual Ring Card ────────────────────── */
+.ring-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.25rem 0.75rem;
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    background: white;
+}
+
+.ring-card svg {
+    overflow: visible;
+}
+
+.ring-card .ring-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 0.6rem;
+    color: #607d8b;
+}
+
+.ring-card .ring-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0.1rem 0 0;
+    color: #37474f;
+}
+
+.ring-card .ring-sub {
+    font-size: 0.72rem;
+    color: #90a4ae;
+    margin: 0;
+}
+
+/* ── SVG Ring Styles ─────────────────────────── */
+.ring-track {
+    fill: none;
+    stroke: var(--ring-bg);
+    stroke-width: 10;
+}
+
+.ring-progress {
+    fill: none;
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 263.9;   /* 2π × r=42 */
+    stroke-dashoffset: 263.9;  /* start empty; JS sets actual value */
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+#cal-ring  { stroke: var(--ring-cal);  }
+#prot-ring { stroke: var(--ring-prot); }
+#carb-ring { stroke: var(--ring-carb); }
+#fat-ring  { stroke: var(--ring-fat);  }
+
+/* ── Main Two-Column Layout ──────────────────── */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 1rem;
+    margin-bottom: var(--spacing);
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Meal Table ──────────────────────────────── */
+.meal-section article {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    font-size: 0.88rem;
+}
+
+thead tr th {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid #eceff1;
+    padding: 0.6rem 0.5rem;
+}
+
+tbody tr td {
+    padding: 0.55rem 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.delete-btn {
+    background: none;
+    border: 1px solid #cfd8dc;
+    color: #607d8b;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.4rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    margin: 0;
+}
+
+.delete-btn:hover {
+    background: #eceff1;
+    color: #37474f;
+}
+
+.meal-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.3rem;
+    background: #eceff1;
+    color: #546e7a;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── Empty-state ─────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #90a4ae;
+    font-size: 0.9rem;
+}
+
+/* ── Form Tweaks ─────────────────────────────── */
+label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #546e7a;
+}
+
+input[type="number"],
+select {
+    font-size: 0.9rem;
+}
+
+button[type="submit"],
+button.primary-btn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+button[type="submit"]:hover,
+button.primary-btn:hover {
+    background: #455a64;
+    border-color: #455a64;
+}
+
+/* ── Goals Page ──────────────────────────────── */
+.goals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 600px) {
+    .goals-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.schofield-result {
+    background: #f5f7fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 0.75rem 0;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #546e7a;
+    display: none;
+}
+
+.schofield-result strong {
+    font-size: 1.4rem;
+    display: block;
+}
+
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+    color: #90a4ae;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.section-divider::before,
+.section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #eceff1;
+}
+
+.save-banner {
+    display: none;
+    background: #e8f5e9;
+    color: #388e3c;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-top: 1rem;
+    font-size: 0.88rem;
+    text-align: center;
+}
+
+/* ── History Page ────────────────────────────── */
+.history-day {
+    margin-bottom: 0.75rem;
+}
+
+.history-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    border-radius: 0.6rem;
+    background: #f5f7fa;
+    border: 1px solid #eceff1;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #37474f;
+    user-select: none;
+    margin-bottom: 0.4rem;
+}
+
+.history-day-header:hover {
+    background: #eceff1;
+}
+
+.history-day-header .day-kcal {
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: #78909c;
+}
+
+.history-day-header .chevron {
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+    color: #90a4ae;
+}
+
+.history-day-header.open .chevron {
+    transform: rotate(180deg);
+}
+
+.history-day-body {
+    display: none;
+    padding: 0.5rem 0 0;
+}
+
+.history-day-body.open {
+    display: block;
+}
+
+.history-ring-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+@media (max-width: 600px) {
+    .history-ring-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.history-ring-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f9fbfc;
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.5rem;
+    border: 1px solid #eceff1;
+}
+
+.history-ring-card .ring-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 0.4rem;
+    color: #607d8b;
+}
+
+.history-ring-card .ring-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #37474f;
+}
+
+.no-history {
+    text-align: center;
+    padding: 3rem;
+    color: #90a4ae;
+}
+
+/* ── Page Title ──────────────────────────────── */
+.page-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #37474f;
+    margin-bottom: 1.25rem;
+}

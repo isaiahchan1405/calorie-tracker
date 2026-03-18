@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <title>MealLogger | Setup Goals</title>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul><li><strong>MealLogger</strong></li></ul>
+        <ul>
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="custom-foods.html">Custom Foods</a></li>
+            <li><a href="history.html">History</a></li>
+            <li><a href="goals.html">Setup Goals</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <p class="page-title">Setup Daily Goals</p>
+
+        <article>
+            <header>Set Daily Targets</header>
+            <p style="font-size:0.85rem; color:#78909c; margin-bottom:1rem;">
+                Enter age and biological sex first. Then either estimate calories with Schofield,
+                or type your own calorie goal manually. Macronutrient targets can be auto-filled
+                using UK recommendations or edited manually.
+            </p>
+            <label>
+                Profile Name
+                <input type="text" id="profile-name" placeholder="Input name here" required>
+            </label>
+            <div class="goals-grid">
+                <label>
+                    Age (years)
+                    <input type="number" id="age" min="10" max="110" placeholder="e.g. 21" required>
+                </label>
+                <label>
+                    Weight (kg)
+                    <input type="number" id="weight" min="20" max="300" placeholder="e.g. 70" required>
+                </label>
+                <label>
+                    Height (cm)
+                    <input type="number" id="height" min="100" max="250" placeholder="e.g. 175" required>
+                </label>
+                <label>
+                    Biological Sex
+                    <select id="sex">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </label>
+            </div>
+            <label>
+                Activity Level
+                <select id="activity">
+                    <option value="1.2">Sedentary (little or no exercise)</option>
+                    <option value="1.375">Lightly active (1–3 days/week)</option>
+                    <option value="1.55" selected>Moderately active (3–5 days/week)</option>
+                    <option value="1.725">Very active (6–7 days/week)</option>
+                    <option value="1.9">Extra active (physical job or twice daily training)</option>
+                </select>
+            </label>
+            <button type="button" class="outline" onclick="calculateSchofield()">Estimate calories (Schofield)</button>
+
+            <div class="schofield-result" id="schofield-result">
+                <strong id="bmr-value"></strong>
+                kcal / day estimated target
+                <small style="display:block; margin-top:0.4rem; color:#90a4ae;" id="bmr-breakdown"></small>
+            </div>
+
+            <p style="font-size:0.85rem; color:#78909c; margin:1rem 0 0.6rem 0;">
+                Use the estimated calories above or enter your own value.
+            </p>
+
+            <label>
+                Daily Calorie Target (kcal)
+                <input type="number" id="final-goal" min="800" max="8000" placeholder="e.g. 2000" value="">
+            </label>
+
+            <button type="button" class="outline" style="margin-bottom:1rem;" onclick="autoFillMacros()">
+                Auto-fill macro targets (UK)
+            </button>
+
+            <div class="section-divider">Macronutrient Targets</div>
+
+            <div class="goals-grid">
+                <label>
+                    Protein target (g)
+                    <input type="number" id="goal-protein" min="0" placeholder="e.g. 50">
+                </label>
+                <label>
+                    Carbohydrates target (g)
+                    <input type="number" id="goal-carbs" min="0" placeholder="e.g. 260">
+                </label>
+                <label>
+                    Fat target (g)
+                    <input type="number" id="goal-fat" min="0" placeholder="e.g. 78">
+                </label>
+                <label>
+                    Fibre target (g)
+                    <input type="number" id="goal-fibre" min="0" placeholder="e.g. 30">
+                </label>
+            </div>
+
+            <button type="button" class="primary-btn" onclick="saveGoals()">Save Goals</button>
+
+            <div class="save-banner" id="save-banner">Goals saved successfully.</div>
+        </article>
+
+    </main>
+
+    <script src="auth-ui.js"></script>
+    <script src="profile-store.js"></script>
+    <script src="profile-sync.js"></script>
+    <script>
+        let profileData = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                profileData = await MealLoggerStore.fetchProfileData();
+            } catch {
+                profileData = MealLoggerStore.defaultProfileData(MealLoggerStore.getActiveProfileKey());
+            }
+
+            const saved = profileData.userGoals || {};
+            if (saved.profileName && saved.profileName !== 'default') {
+                document.getElementById('profile-name').value = saved.profileName;
+            }
+            if (saved.age)       document.getElementById('age').value          = saved.age;
+            if (saved.sex)       document.getElementById('sex').value          = saved.sex;
+            if (saved.weight)    document.getElementById('weight').value       = saved.weight;
+            if (saved.height)    document.getElementById('height').value       = saved.height;
+            if (saved.activity)  document.getElementById('activity').value     = saved.activity;
+            if (saved.calories)  document.getElementById('final-goal').value   = saved.calories;
+            if (saved.protein)   document.getElementById('goal-protein').value = saved.protein;
+            if (saved.carbs)     document.getElementById('goal-carbs').value   = saved.carbs;
+            if (saved.fat)       document.getElementById('goal-fat').value     = saved.fat;
+            if (saved.fibre)     document.getElementById('goal-fibre').value   = saved.fibre;
+        });
+
+        function schofieldBMR(sex, age, weight) {
+            if (sex === 'male') {
+                if (age < 18)      return 17.7 * weight + 657;
+                else if (age < 30) return 15.1 * weight + 692;
+                else if (age < 60) return 11.5 * weight + 873;
+                else               return 11.7 * weight + 588;
+            } else {
+                if (age < 18)      return 13.4 * weight + 692;
+                else if (age < 30) return 14.8 * weight + 487;
+                else if (age < 60) return  8.3 * weight + 846;
+                else               return  9.1 * weight + 658;
+            }
+        }
+
+        function calculateSchofield() {
+            const age    = parseInt(document.getElementById('age').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const sex    = document.getElementById('sex').value;
+            const pal    = parseFloat(document.getElementById('activity').value);
+
+            if (!age || !weight || !height || age < 10 || weight < 20) {
+                alert('Please fill in valid age, weight, and height values.');
+                return;
+            }
+
+            const bmr  = schofieldBMR(sex, age, weight);
+            const tdee = Math.round(bmr * pal);
+
+            document.getElementById('bmr-value').textContent = tdee;
+            document.getElementById('bmr-breakdown').textContent =
+                `BMR: ${Math.round(bmr)} kcal/day × activity factor ${pal} = ${tdee} kcal/day`;
+
+            const resultBox = document.getElementById('schofield-result');
+            resultBox.style.display = 'block';
+
+            document.getElementById('final-goal').value = tdee;
+        }
+
+        function getAgeBand(age) {
+            if (age >= 2 && age <= 3) return '2-3';
+            if (age >= 4 && age <= 6) return '4-6';
+            if (age >= 7 && age <= 10) return '7-10';
+            if (age >= 11 && age <= 14) return '11-14';
+            if (age >= 15 && age <= 18) return '15-18';
+            if (age >= 19 && age <= 64) return '19-64';
+            if (age >= 65 && age <= 74) return '65-74';
+            return '75+';
+        }
+
+        function getProteinTarget(sex, ageBand) {
+            const proteinByBand = {
+                '2-3':  { male: 14.5, female: 14.5 },
+                '4-6':  { male: 19.7, female: 19.7 },
+                '7-10': { male: 28.3, female: 28.3 },
+                '11-14': { male: 42.1, female: 41.2 },
+                '15-18': { male: 55.2, female: 45.0 },
+                '19-64': { male: 55.5, female: 45.0 },
+                '65-74': { male: 53.3, female: 46.5 },
+                '75+': { male: 53.3, female: 46.5 }
+            };
+            return Math.round(proteinByBand[ageBand][sex]);
+        }
+
+        function getFibreTarget(ageBand) {
+            const fibreByBand = {
+                '2-3': 15,
+                '4-6': 20,
+                '7-10': 20,
+                '11-14': 25,
+                '15-18': 30,
+                '19-64': 30,
+                '65-74': 30,
+                '75+': 30
+            };
+            return fibreByBand[ageBand];
+        }
+
+        function autoFillMacros() {
+            const cal = parseFloat(document.getElementById('final-goal').value);
+            const age = parseInt(document.getElementById('age').value);
+            const sex = document.getElementById('sex').value;
+
+            if (!cal || cal < 500) {
+                alert('Please enter a valid calorie target first.');
+                return;
+            }
+
+            if (!age || age < 2) {
+                alert('Please enter a valid age (2+ years) to use UK age-based targets.');
+                return;
+            }
+
+            const ageBand = getAgeBand(age);
+            const protein = getProteinTarget(sex, ageBand);
+            const carbs = Math.round((cal * 0.50) / 4);
+            const fat = Math.round((cal * 0.35) / 9);
+            const fibre = getFibreTarget(ageBand);
+
+            document.getElementById('goal-protein').value = protein;
+            document.getElementById('goal-carbs').value   = carbs;
+            document.getElementById('goal-fat').value     = fat;
+            document.getElementById('goal-fibre').value   = fibre;
+        }
+
+        async function saveGoals() {
+            const profileName = document.getElementById('profile-name').value.trim();
+            const age    = parseInt(document.getElementById('age').value);
+            const sex    = document.getElementById('sex').value;
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const pal    = parseFloat(document.getElementById('activity').value);
+            const cal    = parseInt(document.getElementById('final-goal').value);
+            const prot   = parseInt(document.getElementById('goal-protein').value) || 0;
+            const carbs  = parseInt(document.getElementById('goal-carbs').value)   || 0;
+            const fat    = parseInt(document.getElementById('goal-fat').value)     || 0;
+            const fibre  = parseInt(document.getElementById('goal-fibre').value)   || 0;
+
+            if (!profileName) {
+                alert('Please enter a profile name.');
+                return;
+            }
+
+            if (!age || age < 2) {
+                alert('Please enter a valid age so UK macro targets can be interpreted correctly.');
+                return;
+            }
+
+            if (sex !== 'male' && sex !== 'female') {
+                alert('Please select biological sex.');
+                return;
+            }
+
+            if (!cal || cal < 500) {
+                alert('Please enter a valid calorie target (minimum 500 kcal).');
+                return;
+            }
+
+            const goalsPayload = {
+                profileName: profileName,
+                age: age,
+                sex: sex,
+                weight: Number.isFinite(weight) ? weight : null,
+                height: Number.isFinite(height) ? height : null,
+                activity: Number.isFinite(pal) ? pal : 1.55,
+                calories: cal,
+                protein: prot,
+                carbs: carbs,
+                fat: fat,
+                fibre: fibre
+            };
+
+            if (!profileData) {
+                profileData = MealLoggerStore.defaultProfileData(MealLoggerStore.getActiveProfileKey());
+            }
+            profileData.userGoals = goalsPayload;
+
+            try {
+                profileData = await MealLoggerStore.saveProfileData(profileData);
+            } catch {
+                alert('Could not save profile data to local file storage API.');
+                return;
+            }
+
+            const banner = document.getElementById('save-banner');
+            banner.style.display = 'block';
+            setTimeout(() => { banner.style.display = 'none'; }, 3000);
+        }
+
+    </script>
+</body>
+</html>

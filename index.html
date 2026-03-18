@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <title>MealLogger | Dashboard</title>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul><li><strong>MealLogger</strong></li></ul>
+        <ul>
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="custom-foods.html">Custom Foods</a></li>
+            <li><a href="history.html">History</a></li>
+            <li><a href="goals.html">Setup Goals</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+
+        <p class="page-title" id="today-heading"></p>
+
+        <div class="ring-grid">
+
+            <!-- Calories -->
+            <div class="ring-card">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="42"/>
+                    <circle id="cal-ring" class="ring-progress" cx="50" cy="50" r="42"/>
+                </svg>
+                <span class="ring-label">Calories</span>
+                <span class="ring-value" id="cal-display">0</span>
+                <span class="ring-sub" id="cal-goal-display">/ 2000 kcal</span>
+            </div>
+
+            <!-- Protein -->
+            <div class="ring-card">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="42"/>
+                    <circle id="prot-ring" class="ring-progress" cx="50" cy="50" r="42"/>
+                </svg>
+                <span class="ring-label">Protein</span>
+                <span class="ring-value" id="prot-display">0g</span>
+                <span class="ring-sub" id="prot-goal-display">/ 50g</span>
+            </div>
+
+            <!-- Carbohydrates -->
+            <div class="ring-card">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="42"/>
+                    <circle id="carb-ring" class="ring-progress" cx="50" cy="50" r="42"/>
+                </svg>
+                <span class="ring-label">Carbs</span>
+                <span class="ring-value" id="carb-display">0g</span>
+                <span class="ring-sub" id="carb-goal-display">/ 260g</span>
+            </div>
+
+            <!-- Fat -->
+            <div class="ring-card">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <circle class="ring-track" cx="50" cy="50" r="42"/>
+                    <circle id="fat-ring" class="ring-progress" cx="50" cy="50" r="42"/>
+                </svg>
+                <span class="ring-label">Fat</span>
+                <span class="ring-value" id="fat-display">0g</span>
+                <span class="ring-sub" id="fat-goal-display">/ 78g</span>
+            </div>
+
+        </div>
+
+        <div class="dashboard-grid">
+
+            <article>
+                <header>Log a Meal</header>
+                <form id="log-form">
+                    <label>
+                        Meal Category
+                        <select id="category">
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Lunch">Lunch</option>
+                            <option value="Dinner">Dinner</option>
+                            <option value="Snack">Snack</option>
+                            <option value="Drinks">Drinks</option>
+                        </select>
+                    </label>
+                    <label>
+                        Food Item
+                        <input type="text" id="food-search" placeholder="Search for a food…" autocomplete="off">
+                        <small style="color: #999; display: block; margin-top: 0.25rem;">Start typing to search</small>
+                        <div id="food-results" style="position: absolute; background: white; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; display: none; z-index: 10; min-width: 250px; margin-top: 2px;"></div>
+                    </label>
+                    <label>
+                        Amount (g / ml)
+                        <input type="number" id="grams" min="1" max="2000" placeholder="e.g. 150" required>
+                    </label>
+                    <button type="submit">Log Meal</button>
+                </form>
+
+                <p id="form-error" style="color:#607d8b; font-size:0.82rem; display:none; margin-top:0.5rem;"></p>
+            </article>
+
+            <article class="meal-section">
+                <header>Today's Log</header>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Food</th>
+                            <th>Amount</th>
+                            <th>Kcal</th>
+                            <th>Protein</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="meal-table-body">
+                        <tr>
+                            <td colspan="6" class="empty-state">No meals logged yet — add one on the left.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+
+        </div>
+
+    </main>
+    <script src="auth-ui.js"></script>
+    <script src="profile-store.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
