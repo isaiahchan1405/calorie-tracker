@@ -191,20 +191,6 @@
             return '75+';
         }
 
-        function getProteinTarget(sex, ageBand) {
-            const proteinByBand = {
-                '2-3':  { male: 14.5, female: 14.5 },
-                '4-6':  { male: 19.7, female: 19.7 },
-                '7-10': { male: 28.3, female: 28.3 },
-                '11-14': { male: 42.1, female: 41.2 },
-                '15-18': { male: 55.2, female: 45.0 },
-                '19-64': { male: 55.5, female: 45.0 },
-                '65-74': { male: 53.3, female: 46.5 },
-                '75+': { male: 53.3, female: 46.5 }
-            };
-            return Math.round(proteinByBand[ageBand][sex]);
-        }
-
         function getFibreTarget(ageBand) {
             const fibreByBand = {
                 '2-3': 15,
@@ -220,6 +206,7 @@
         }
 
         function autoFillMacros() {
+            const weight = parseFloat(document.getElementById('weight').value);
             const cal = parseFloat(document.getElementById('final-goal').value);
             const age = parseInt(document.getElementById('age').value);
             const sex = document.getElementById('sex').value;
@@ -234,9 +221,10 @@
                 return;
             }
 
+            //refer to the Dietary Reference values set by the government
             const ageBand = getAgeBand(age);
-            const protein = getProteinTarget(sex, ageBand);
-            const carbs = Math.round((cal * 0.50) / 4);
+            const protein = Math.round(cal * 0.15 / 4);
+            const carbs = Math.round((cal * 0.50) / 3.75);
             const fat = Math.round((cal * 0.35) / 9);
             const fibre = getFibreTarget(ageBand);
 
