@@ -15,6 +15,7 @@
             <li><a href="custom-foods.html">Custom Foods</a></li>
             <li><a href="history.html">History</a></li>
             <li><a href="goals.html">Setup Goals</a></li>
+            <li style="text-align: right;"><button type="button" class="outline" style="margin: 0;" onclick="firebaseLogout()">Logout</button></li>
         </ul>
     </nav>
 
@@ -112,13 +113,20 @@
 
     </main>
 
-    <script src="auth-ui.js"></script>
-    <script src="profile-store.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <!-- Initialize Firebase -->
+    <script src="firebase-init.js"></script>
+    <script src="firebase-auth.js"></script>
+    <script src="firebase-store.js"></script>
     <script src="profile-sync.js"></script>
     <script>
         let profileData = null;
 
         window.addEventListener('DOMContentLoaded', async () => {
+            // Load persisted goals so this form opens with the user's latest values.
             try {
                 profileData = await MealLoggerStore.fetchProfileData();
             } catch {
@@ -142,6 +150,7 @@
         });
 
         function schofieldBMR(sex, age, weight) {
+            // Schofield equations estimate resting energy needs from sex, age, and weight.
             if (sex === 'male') {
                 if (age < 18)      return 17.7 * weight + 657;
                 else if (age < 30) return 15.1 * weight + 692;
@@ -167,6 +176,7 @@
                 return;
             }
 
+            // Daily target is BMR multiplied by the chosen activity factor (PAL).
             const bmr  = schofieldBMR(sex, age, weight);
             const tdee = Math.round(bmr * pal);
 
@@ -181,6 +191,7 @@
         }
 
         function getAgeBand(age) {
+            // UK recommendations are grouped by age bands, not exact ages.
             if (age >= 2 && age <= 3) return '2-3';
             if (age >= 4 && age <= 6) return '4-6';
             if (age >= 7 && age <= 10) return '7-10';
@@ -192,6 +203,7 @@
         }
 
         function getFibreTarget(ageBand) {
+            // Fibre target lookup from UK age-band guidance.
             const fibreByBand = {
                 '2-3': 15,
                 '4-6': 20,
@@ -221,7 +233,7 @@
                 return;
             }
 
-            //refer to the Dietary Reference values set by the government
+            // Apply macro split from dietary reference guidance.
             const ageBand = getAgeBand(age);
             const protein = Math.round(cal * 0.15 / 4);
             const carbs = Math.round((cal * 0.50) / 3.75);
@@ -267,6 +279,7 @@
                 return;
             }
 
+            // Persist one normalized payload so dashboard/history can read a stable shape.
             const goalsPayload = {
                 profileName: profileName,
                 age: age,
