@@ -24,7 +24,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     
     <!-- Initialize Firebase -->
-    <script src="firebase-init.js"></script>
-    <script src="firebase-auth.js"></script>
+        <script src="firebase-init.js"></script>
+        <script>
+            // Always sign out when visiting the login page to ensure a clean state
+            firebase.auth().signOut().catch(() => {});
+        </script>
+        <script src="firebase-auth.js"></script>
 </body>
 </html>
