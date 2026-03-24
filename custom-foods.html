@@ -142,7 +142,7 @@
             } catch {
                 customFoods.splice(idx, 0, removed);
                 const errorEl = document.getElementById('custom-food-error');
-                errorEl.textContent = 'Could not remove custom food. Check local file storage server.';
+                errorEl.textContent = 'Could not remove custom food. Check Firebase connection and auth.';
                 errorEl.style.display = 'block';
             }
         }
@@ -210,7 +210,7 @@
                     errorEl.style.display = 'block';
                 } catch {
                     customFoods = customFoods.filter(f => f !== newFood);
-                    errorEl.textContent = 'Could not save custom food. Check local file storage server.';
+                    errorEl.textContent = 'Could not save custom food. Check Firebase connection and auth.';
                     errorEl.style.display = 'block';
                 }
             });
@@ -237,7 +237,7 @@
                 } catch {
                     customFoods = previousFoods;
                     const errorEl = document.getElementById('custom-food-error');
-                    errorEl.textContent = 'Could not reset custom foods. Check local file storage server.';
+                    errorEl.textContent = 'Could not reset custom foods. Check Firebase connection and auth.';
                     errorEl.style.display = 'block';
                 }
             });

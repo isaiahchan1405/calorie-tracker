@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         meals = [];
         const errEl = document.getElementById('form-error');
         if (errEl) {
-            errEl.textContent = 'Could not load profile data from local file storage API.';
+            errEl.textContent = 'Could not load profile data from Firebase.';
             errEl.style.display = 'block';
         }
     }
@@ -66,7 +66,7 @@ async function persistMeals() {
     } catch {
         const errEl = document.getElementById('form-error');
         if (errEl) {
-            errEl.textContent = 'Could not save meals to local file storage API.';
+            errEl.textContent = 'Could not save meals to Firebase.';
             errEl.style.display = 'block';
         }
     }

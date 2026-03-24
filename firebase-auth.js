@@ -19,5 +19,10 @@ function firebaseLogout() {
 firebase.auth().onAuthStateChanged(user => {
   if (!user && !window.location.pathname.includes('login')) {
     window.location.href = 'login.html';
+    return;
+  }
+
+  if (user && window.location.pathname.includes('login')) {
+    window.location.href = 'index.html';
   }
 });

@@ -302,7 +302,7 @@
             try {
                 profileData = await MealLoggerStore.saveProfileData(profileData);
             } catch {
-                alert('Could not save profile data to local file storage API.');
+                alert('Could not save profile data to Firebase.');
                 return;
             }
 
